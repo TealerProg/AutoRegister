@@ -2,6 +2,7 @@ package com.billy.android.register
 
 import com.google.gson.Gson
 import org.gradle.api.Project
+import org.gradle.internal.impldep.com.google.gson.Gson
 
 import java.lang.reflect.Type
 
