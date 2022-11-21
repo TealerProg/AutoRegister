@@ -51,9 +51,9 @@ class MyTestClassVisitor extends ClassVisitor{
             //要重写这个方法，这个方法 简单理解就是整个方法调用都是在执行这个指令调用 Insn 其实就是instrument
             if(opcode>=Opcodes.IRETURN && opcode<=Opcodes.RETURN){
                 //这里就是我们插入代码的核心，这里我们要借助一个插件  ASM Bytecode Viewer
-               mv.visitTypeInsn(Opcodes.NEW, "com/billy/app_lib_interface/CategoryD");
+               mv.visitTypeInsn(Opcodes.NEW, "com/billy/app_lib/CategoryA");
                mv.visitInsn(Opcodes.DUP);
-               mv.visitMethodInsn(Opcodes.INVOKESPECIAL, "com/billy/app_lib_interface/CategoryD", "<init>", "()V", false);
+               mv.visitMethodInsn(Opcodes.INVOKESPECIAL, "com/billy/app_lib/CategoryA", "<init>", "()V", false);
                mv.visitMethodInsn(Opcodes.INVOKESTATIC, "com/billy/app_lib_interface/CategoryManager", "register", "(Lcom/billy/app_lib_interface/ICategory;)V", false);
 
 
