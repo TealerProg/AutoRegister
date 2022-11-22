@@ -10,6 +10,7 @@ import com.android.build.api.transform.TransformException
 import com.android.build.api.transform.TransformInput
 import com.android.build.api.transform.TransformOutputProvider
 import com.android.build.gradle.internal.pipeline.TransformManager
+import org.apache.commons.codec.digest.DigestUtils
 import org.apache.commons.io.FileUtils
 import org.gradle.api.Project
 
@@ -18,6 +19,8 @@ import java.util.jar.JarFile
 class RegisterTransformBiliTest extends Transform {
 
     Project project
+    String needInsertClassNameLeft="com/billy/app_lib_interface/CategoryManager"
+    File needInsertFile=null
 
     RegisterTransformBiliTest(Project project){
         this.project=project
@@ -53,7 +56,7 @@ class RegisterTransformBiliTest extends Transform {
                 input.jarInputs.each {
                     JarInput jarInput->
                         //先遍历Jar包
-//                        scanJar(jarInput,outputProvider)
+                        scanJar(jarInput,outputProvider)
 
                 }
                 input.directoryInputs.each { DirectoryInput  directoryInput->
@@ -91,17 +94,46 @@ class RegisterTransformBiliTest extends Transform {
         while (enumeration.hasMoreElements()){
             def jarEntry = enumeration.nextElement()
             def entryName = jarEntry.name
-//            if(entryName.startsWith("android/")||
-//                    entryName.startsWith("androidx/")||
-//                    entryName.startsWith("META-INF")){
-//                continue
-//            }
+            if(entryName.startsWith("android/")||
+                    entryName.startsWith("androidx/")||
+                    entryName.startsWith("META-INF")){
+                continue
+            }
             project.logger.error('jar---'+src.absolutePath+'  class---'+entryName)
 
+            if(shouldProcessClass(entryName)){
+                String needEntryName=entryName.substring(0,entryName.lastIndexOf("."))
+                if(needEntryName.endsWith(needInsertClassNameLeft)){
+                    needInsertFile=dest
+                    project.logger.error('needInsertClass:'+needInsertFile.absolutePath)
+                }else {
+//                    asmScanClass(jarFile.getInputStream(jarEntry),src.absolutePath)
+                }
 
+            }
         }
         //复制jar文件到transform目录：build/transforms/auto-register/
 //        FileUtils.copyFile(src, dest)
+    }
+
+    static File getDestFile(JarInput jarInput, TransformOutputProvider outputProvider) {
+        def destName = jarInput.name
+        // 重名名输出文件,因为可能同名,会覆盖
+        def hexName = DigestUtils.md5Hex(jarInput.file.absolutePath)
+        if (destName.endsWith(".jar")) {
+            destName = destName.substring(0, destName.length() - 4)
+        }
+        // 获得输出文件
+        File dest = outputProvider.getContentLocation(destName + "_" + hexName, jarInput.contentTypes, jarInput.scopes, Format.JAR)
+        return dest
+    }
+
+    boolean shouldProcessClass(String entryName) {
+//        println('classes:' + entryName)
+        if (entryName == null || !entryName.endsWith(".class"))
+            return false
+        else
+            return true
     }
 
 
