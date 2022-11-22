@@ -10,9 +10,13 @@ import com.android.build.api.transform.TransformException
 import com.android.build.api.transform.TransformInput
 import com.android.build.api.transform.TransformOutputProvider
 import com.android.build.gradle.internal.pipeline.TransformManager
+import jdk.internal.org.objectweb.asm.Opcodes
 import org.apache.commons.codec.digest.DigestUtils
 import org.apache.commons.io.FileUtils
 import org.gradle.api.Project
+import org.objectweb.asm.ClassReader
+import org.objectweb.asm.ClassVisitor
+import org.objectweb.asm.ClassWriter
 
 import java.util.jar.JarFile
 
@@ -21,6 +25,7 @@ class RegisterTransformBiliTest extends Transform {
     Project project
     String needInsertClassNameLeft="com/billy/app_lib_interface/CategoryManager"
     File needInsertFile=null
+    String interfaceName = "com/billy/app_lib_interface/ICategory"
 
     RegisterTransformBiliTest(Project project){
         this.project=project
@@ -107,13 +112,45 @@ class RegisterTransformBiliTest extends Transform {
                     needInsertFile=dest
                     project.logger.error('needInsertClass:'+needInsertFile.absolutePath)
                 }else {
-//                    asmScanClass(jarFile.getInputStream(jarEntry),src.absolutePath)
+                    asmScanClass(jarFile.getInputStream(jarEntry),src.absolutePath)
                 }
 
             }
         }
         //复制jar文件到transform目录：build/transforms/auto-register/
 //        FileUtils.copyFile(src, dest)
+    }
+
+    private void  asmScanClass(InputStream inputStream, String filePath){
+        ClassReader cr=new ClassReader(inputStream)
+        ClassWriter cw=new ClassWriter(cr,0)
+        BiliScanClassVisitor cv=new BiliScanClassVisitor
+                (Opcodes.ASM5,cw,filePath)
+        cr.accept(cv, ClassReader.EXPAND_FRAMES)
+        inputStream.close()
+    }
+
+    class BiliScanClassVisitor extends ClassVisitor{
+        private String filePath
+
+        BiliScanClassVisitor(int api, ClassVisitor cv, String filePath) {
+            super(api, cv)
+            this.filePath = filePath
+//             project.logger.error('init---ScanClassVisitor')
+        }
+
+        @Override
+        void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {
+            super.visit(version, access, name, signature, superName, interfaces)
+            project.logger.error('version:'+version+" access:"+access+" name:"+name+" signature:"+signature+" superName:"+superName+" interfaces:"+interfaces)
+
+            interfaces.each {itName->
+                if(itName==interfaceName){
+                    project.logger.error('this class is our class:'+name)
+                }
+            }
+
+        }
     }
 
     static File getDestFile(JarInput jarInput, TransformOutputProvider outputProvider) {
