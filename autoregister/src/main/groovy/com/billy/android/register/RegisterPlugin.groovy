@@ -2,7 +2,7 @@ package com.billy.android.register
 
 import com.android.build.gradle.AppExtension
 import com.android.build.gradle.AppPlugin
-import com.billy.android.register.test.RegisterTransformTest
+import com.billy.android.register.bilitest.RegisterTransformBiliTest
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 /**
@@ -27,7 +27,7 @@ public class RegisterPlugin implements Plugin<Project> {
         if (isApp) {
             println 'project(' + project.name + ') apply auto-register plugin'
             def android = project.extensions.getByType(AppExtension)
-            def transformImpl = new RegisterTransformTest(project)
+            def transformImpl = new RegisterTransformBiliTest(project)
             android.registerTransform(transformImpl)
         }
     }
